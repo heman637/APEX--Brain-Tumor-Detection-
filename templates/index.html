@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuroScan AI — Brain Tumor Detection System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   CSS VARIABLES & RESET
+═══════════════════════════════════════════════ */
+:root {
+  --navy:      #060d1f;
+  --navy-2:    #0a1628;
+  --navy-3:    #0f1f3d;
+  --navy-4:    #162444;
+  --cyan:      #00d4ff;
+  --cyan-dim:  #00a8cc;
+  --cyan-glow: rgba(0,212,255,0.15);
+  --green:     #00ff88;
+  --red:       #ff4d6d;
+  --orange:    #ff9a00;
+  --white:     #e8f4f8;
+  --grey:      #8899aa;
+  --border:    rgba(0,212,255,0.2);
+  --card-bg:   rgba(10,22,40,0.9);
+  --font-head: 'DM Serif Display', serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--navy);
+  color: var(--white);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ═══════════════════════════════════════════════
+   ANIMATED BACKGROUND GRID
+═══════════════════════════════════════════════ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════ */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(6,13,31,0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--cyan);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 0 12px var(--cyan-glow);
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
+@keyframes pulse-border {
+  0%, 100% { box-shadow: 0 0 12px var(--cyan-glow); }
+  50%       { box-shadow: 0 0 24px rgba(0,212,255,0.4); }
+}
+
+.logo-text {
+  font-family: var(--font-head);
+  font-size: 1.4rem;
+  color: var(--white);
+  letter-spacing: -0.5px;
+}
+
+.logo-text span { color: var(--cyan); }
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--grey);
+}
+
+.status-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: blink 2s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* ═══════════════════════════════════════════════
+   MAIN LAYOUT
+═══════════════════════════════════════════════ */
+.app-container {
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 1.5rem;
+  min-height: calc(100vh - 64px);
+}
+
+/* ═══════════════════════════════════════════════
+   HERO SECTION
+═══════════════════════════════════════════════ */
+.hero {
+  grid-column: 1 / -1;
+  padding: 2rem 0 1rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.5rem;
+}
+
+.hero-title {
+  font-family: var(--font-head);
+  font-size: 2.8rem;
+  line-height: 1.1;
+  color: var(--white);
+}
+
+.hero-title em {
+  font-style: italic;
+  color: var(--cyan);
+}
+
+.hero-subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--grey);
+  margin-top: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.metrics-row {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.metric-chip {
+  text-align: center;
+  padding: 10px 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+}
+
+.metric-chip .val {
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: var(--cyan);
+}
+
+.metric-chip .lbl {
+  font-size: 0.65rem;
+  color: var(--grey);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+
+/* ═══════════════════════════════════════════════
+   LEFT PANEL — UPLOAD
+═══════════════════════════════════════════════ */
+.upload-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.card:hover { border-color: rgba(0,212,255,0.4); }
+
+.card-header {
+  padding: 14px 18px;
+  background: rgba(0,212,255,0.05);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+
+.card-body { padding: 18px; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  background: rgba(0,0,0,0.3);
+  border-radius: 8px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--grey);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.tab.active {
+  background: var(--cyan);
+  color: var(--navy);
+  font-weight: 500;
+}
+
+/* Drop Zone */
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.drop-zone:hover,
+.drop-zone.dragover {
+  border-color: var(--cyan);
+  background: var(--cyan-glow);
+}
+
+.drop-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+  opacity: 0.7;
+}
+
+.drop-text {
+  font-size: 0.85rem;
+  color: var(--grey);
+  margin-bottom: 6px;
+}
+
+.drop-hint {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: rgba(136,153,170,0.6);
+}
+
+.drop-zone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Preview */
+#preview-container {
+  display: none;
+  margin-top: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  position: relative;
+}
+
+#preview-container img {
+  width: 100%;
+  display: block;
+}
+
+.preview-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0,0,0,0.7);
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+/* Analyze Button */
+.btn-analyze {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan-dim));
+  color: var(--navy);
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-analyze:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0,212,255,0.3);
+}
+
+.btn-analyze:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-analyze .spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(6,13,31,0.3);
+  border-top-color: var(--navy);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: none;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Model Info */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.info-item {
+  background: rgba(0,0,0,0.3);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.info-item .key {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--grey);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.info-item .val {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--cyan);
+  margin-top: 3px;
+}
+
+/* ═══════════════════════════════════════════════
+   RIGHT PANEL — RESULTS
+═══════════════════════════════════════════════ */
+.results-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Empty state */
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 3rem;
+  color: var(--grey);
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.4;
+}
+
+.empty-text {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Results (initially hidden) */
+#results-content { display: none; }
+
+/* Classification Result */
+.result-banner {
+  border-radius: 10px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid;
+  position: relative;
+  overflow: hidden;
+}
+
+.result-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.08;
+}
+
+.result-banner.tumor    { border-color: rgba(255,77,109,0.5); background: rgba(255,77,109,0.1); }
+.result-banner.no-tumor { border-color: rgba(0,255,136,0.5); background: rgba(0,255,136,0.1); }
+
+.result-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--grey);
+  margin-bottom: 6px;
+}
+
+.result-name {
+  font-family: var(--font-head);
+  font-size: 2rem;
+}
+
+.result-banner.tumor    .result-name { color: var(--red); }
+.result-banner.no-tumor .result-name { color: var(--green); }
+
+.confidence-display {
+  text-align: right;
+}
+
+.conf-value {
+  font-family: var(--font-mono);
+  font-size: 2.2rem;
+  font-weight: 500;
+  color: var(--cyan);
+}
+
+.conf-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--grey);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.inference-time {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--grey);
+  margin-top: 4px;
+}
+
+/* Probability Bars */
+.prob-bars { display: flex; flex-direction: column; gap: 10px; }
+
+.prob-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 60px;
+  align-items: center;
+  gap: 12px;
+}
+
+.prob-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--grey);
+}
+
+.prob-track {
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.prob-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 0%;
+}
+
+.prob-fill.active    { background: linear-gradient(90deg, var(--cyan), var(--green)); }
+.prob-fill.inactive  { background: rgba(136,153,170,0.3); }
+
+.prob-value {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--grey);
+  text-align: right;
+}
+
+/* Images grid */
+.images-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.image-card {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.3);
+}
+
+.image-card img {
+  width: 100%;
+  display: block;
+}
+
+.image-label {
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--grey);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Segmentation Dice */
+.dice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.dice-card {
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.2);
+}
+
+.dice-card .region {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  color: var(--grey);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.dice-card .dice-val {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 500;
+}
+
+.dice-card .dice-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--grey);
+  margin-top: 2px;
+}
+
+.dice-val.good    { color: var(--green); }
+.dice-val.ok      { color: var(--orange); }
+.dice-val.poor    { color: var(--red); }
+
+/* Volume bars */
+.volume-list { display: flex; flex-direction: column; gap: 8px; }
+
+.volume-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 80px;
+  align-items: center;
+  gap: 10px;
+}
+
+.volume-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--grey);
+}
+
+.volume-track {
+  height: 8px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.volume-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+.wt-fill { background: linear-gradient(90deg, #ff4d6d, #ff6b6b); }
+.tc-fill { background: linear-gradient(90deg, #ff9a00, #ffb347); }
+.et-fill { background: linear-gradient(90deg, #00ff88, #00d4ff); }
+
+.volume-value {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--grey);
+  text-align: right;
+}
+
+/* Modality Grid */
+#modality-grid-container img {
+  width: 100%;
+  border-radius: 8px;
+  display: block;
+}
+
+/* Report Button */
+.btn-report {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 24px;
+  background: transparent;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.btn-report:hover {
+  background: var(--cyan-glow);
+  box-shadow: 0 0 16px rgba(0,212,255,0.2);
+}
+
+/* Loading overlay */
+#loading-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(6,13,31,0.85);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+#loading-overlay.show { display: flex; }
+
+.scan-animation {
+  width: 200px;
+  height: 200px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scan-animation::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(0,212,255,0.3);
+  border-radius: 50%;
+}
+
+.scan-line {
+  position: absolute;
+  width: 50%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyan));
+  top: 50%;
+  left: 50%;
+  transform-origin: left center;
+  animation: scan-rotate 2s linear infinite;
+}
+
+@keyframes scan-rotate { to { transform: rotate(360deg); } }
+
+.scan-center {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 12px var(--cyan);
+  animation: pulse-center 1s ease-in-out infinite;
+}
+
+@keyframes pulse-center {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.4); }
+}
+
+.loading-text {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--cyan);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: flicker 1.5s ease-in-out infinite;
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+.loading-sub {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--grey);
+  letter-spacing: 1px;
+}
+
+/* ═══════════════════════════════════════════════
+   NOTIFICATION
+═══════════════════════════════════════════════ */
+.notification {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 20px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  display: none;
+  z-index: 300;
+  animation: slide-in 0.3s ease;
+}
+
+@keyframes slide-in {
+  from { transform: translateX(100px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+.notification.error { border-color: rgba(255,77,109,0.5); color: var(--red); }
+.notification.success { border-color: rgba(0,255,136,0.5); color: var(--green); }
+
+/* ═══════════════════════════════════════════════
+   DISCLAIMER
+═══════════════════════════════════════════════ */
+.disclaimer {
+  grid-column: 1 / -1;
+  padding: 12px 18px;
+  background: rgba(255,154,0,0.05);
+  border: 1px solid rgba(255,154,0,0.2);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: rgba(255,154,0,0.7);
+  letter-spacing: 0.3px;
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--navy); }
+::-webkit-scrollbar-thumb { background: var(--navy-4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,212,255,0.3); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🧠</div>
+    <div class="logo-text">Neuro<span>Scan</span> AI</div>
+  </div>
+  <div class="header-info">
+    <span class="status-dot">
+      <span class="dot"></span>
+      SYSTEM ONLINE
+    </span>
+    <span>DEVICE: {{ device.upper() }}</span>
+    <span>CLS ACC: {{ metrics.classification_accuracy }}%</span>
+    <span>MEAN DICE: 0.849</span>
+  </div>
+</header>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay">
+  <div class="scan-animation">
+    <div class="scan-line"></div>
+    <div class="scan-center"></div>
+  </div>
+  <div class="loading-text">ANALYZING MRI SCAN</div>
+  <div class="loading-sub" id="loading-sub">Initializing neural network...</div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notification" id="notification"></div>
+
+<!-- MAIN APP -->
+<div class="app-container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div>
+      <h1 class="hero-title">Brain Tumor<br><em>Detection System</em></h1>
+      <p class="hero-subtitle">EfficientNet-B4 + U-Net + Cross-Attention Fusion · BraTS 2020</p>
+    </div>
+    <div class="metrics-row">
+      <div class="metric-chip">
+        <div class="val">99.87%</div>
+        <div class="lbl">Classification</div>
+      </div>
+      <div class="metric-chip">
+        <div class="val">0.849</div>
+        <div class="lbl">Mean Dice</div>
+      </div>
+      <div class="metric-chip">
+        <div class="val">3.38mm</div>
+        <div class="lbl">H95 (WT)</div>
+      </div>
+      <div class="metric-chip">
+        <div class="val">4</div>
+        <div class="lbl">Tumor Types</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEFT PANEL -->
+  <div class="upload-panel">
+
+    <!-- Upload Card -->
+    <div class="card">
+      <div class="card-header">
+        <span>📂</span> INPUT MRI SCAN
+      </div>
+      <div class="card-body">
+        <div class="tabs">
+          <button class="tab active" onclick="setMode('2d', this)">2D IMAGE</button>
+          <button class="tab" onclick="setMode('3d', this)">3D H5 SLICE</button>
+        </div>
+
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="file-input" accept=".jpg,.jpeg,.png,.h5">
+          <div class="drop-icon" id="drop-icon">🫧</div>
+          <div class="drop-text" id="drop-text">Drop MRI scan here or click to browse</div>
+          <div class="drop-hint" id="drop-hint">Accepts: JPG, PNG (2D mode)</div>
+        </div>
+
+        <div id="preview-container">
+          <img id="preview-img" src="" alt="Preview">
+          <span class="preview-badge" id="preview-badge">2D IMAGE</span>
+        </div>
+
+        <button class="btn-analyze" id="analyze-btn" onclick="runAnalysis()" disabled>
+          <div class="spinner" id="btn-spinner"></div>
+          <span id="btn-text">SELECT A FILE TO BEGIN</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Model Info Card -->
+    <div class="card">
+      <div class="card-header">
+        <span>⚙️</span> MODEL SPECIFICATIONS
+      </div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="key">Backbone</div>
+            <div class="val">EfficientNet-B4</div>
+          </div>
+          <div class="info-item">
+            <div class="key">Decoder</div>
+            <div class="val">U-Net + Attn</div>
+          </div>
+          <div class="info-item">
+            <div class="key">Fusion</div>
+            <div class="val">Cross-Attn 2.5D</div>
+          </div>
+          <div class="info-item">
+            <div class="key">Parameters</div>
+            <div class="val">30.2M</div>
+          </div>
+          <div class="info-item">
+            <div class="key">Training Data</div>
+            <div class="val">22,151 imgs</div>
+          </div>
+          <div class="info-item">
+            <div class="key">BraTS Slices</div>
+            <div class="val">57,195</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Card -->
+    <div class="card">
+      <div class="card-header">
+        <span>📊</span> VALIDATION METRICS
+      </div>
+      <div class="card-body">
+        <div class="prob-bars">
+          <div class="prob-row">
+            <span class="prob-label">WT Dice</span>
+            <div class="prob-track"><div class="prob-fill active" style="width:84.3%"></div></div>
+            <span class="prob-value">0.843</span>
+          </div>
+          <div class="prob-row">
+            <span class="prob-label">TC Dice</span>
+            <div class="prob-track"><div class="prob-fill active" style="width:84.4%"></div></div>
+            <span class="prob-value">0.844</span>
+          </div>
+          <div class="prob-row">
+            <span class="prob-label">ET Dice</span>
+            <div class="prob-track"><div class="prob-fill active" style="width:86.0%"></div></div>
+            <span class="prob-value">0.860</span>
+          </div>
+          <div class="prob-row">
+            <span class="prob-label">Cls Accuracy</span>
+            <div class="prob-track"><div class="prob-fill active" style="width:99.87%"></div></div>
+            <span class="prob-value">99.87%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="results-panel">
+
+    <!-- Empty state -->
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">🔬</div>
+      <div class="empty-text">Upload an MRI scan to begin analysis</div>
+      <p style="font-size:0.75rem; color:var(--grey); margin-top:12px; max-width:300px; text-align:center; line-height:1.6">
+        The system will perform tumor classification and segmentation with Grad-CAM explainability
+      </p>
+    </div>
+
+    <!-- Results (shown after analysis) -->
+    <div id="results-content">
+
+      <!-- Classification Result -->
+      <div class="card">
+        <div class="card-header"><span>🎯</span> CLASSIFICATION RESULT</div>
+        <div class="card-body" style="display:flex; flex-direction:column; gap:16px;">
+          <div class="result-banner" id="result-banner">
+            <div>
+              <div class="result-label">DIAGNOSIS</div>
+              <div class="result-name" id="result-name">—</div>
+              <div class="inference-time" id="inference-time">— ms inference</div>
+            </div>
+            <div class="confidence-display">
+              <div class="conf-value" id="conf-value">—</div>
+              <div class="conf-label">CONFIDENCE</div>
+            </div>
+          </div>
+
+          <div class="prob-bars" id="prob-bars"></div>
+        </div>
+      </div>
+
+      <!-- Segmentation (3D only) -->
+      <div id="seg-section" style="display:none;">
+
+        <!-- MRI Modalities -->
+        <div class="card">
+          <div class="card-header"><span>🖼️</span> MRI MODALITIES + SEGMENTATION</div>
+          <div class="card-body" id="modality-grid-container"></div>
+        </div>
+
+        <!-- Segmentation Detail -->
+        <div class="card">
+          <div class="card-header"><span>🧩</span> SEGMENTATION RESULTS</div>
+          <div class="card-body" style="display:flex; flex-direction:column; gap:16px;">
+
+            <div class="images-grid">
+              <div class="image-card">
+                <img id="seg-flair" src="" alt="FLAIR">
+                <div class="image-label">FLAIR (original)</div>
+              </div>
+              <div class="image-card">
+                <img id="seg-overlay" src="" alt="Segmentation">
+                <div class="image-label">Tumor Segmentation</div>
+              </div>
+            </div>
+
+            <div class="dice-grid" id="dice-grid"></div>
+
+            <div>
+              <div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--grey); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">TUMOR VOLUMES</div>
+              <div class="volume-list" id="volume-list"></div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Report -->
+        <div class="card">
+          <div class="card-header"><span>📋</span> CLINICAL REPORT</div>
+          <div class="card-body" style="display:flex; align-items:center; justify-content:space-between; gap:1rem;">
+            <div style="font-size:0.82rem; color:var(--grey); line-height:1.6;">
+              Full clinical report including classification, segmentation overlays, quantitative metrics, and clinical interpretation.
+            </div>
+            <a id="report-btn" href="#" class="btn-report" target="_blank">
+              📄 DOWNLOAD REPORT
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">
+    ⚠️ RESEARCH USE ONLY — This AI system is a decision support tool and does not replace clinical judgment. All findings must be verified by a qualified radiologist and treating physician.
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════════════════
+let currentMode = '2d';
+let selectedFile = null;
+
+// ═══════════════════════════════════════════════
+// MODE SWITCHING
+// ═══════════════════════════════════════════════
+function setMode(mode, btn) {
+  currentMode = mode;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+
+  const input = document.getElementById('file-input');
+  const hint  = document.getElementById('drop-hint');
+
+  if (mode === '2d') {
+    input.accept = '.jpg,.jpeg,.png';
+    hint.textContent = 'Accepts: JPG, PNG (2D mode)';
+    document.getElementById('drop-icon').textContent = '🫧';
+  } else {
+    input.accept = '.h5';
+    hint.textContent = 'Accepts: .h5 BraTS slice (3D mode)';
+    document.getElementById('drop-icon').textContent = '🧊';
+  }
+
+  resetUI();
+}
+
+// ═══════════════════════════════════════════════
+// FILE HANDLING
+// ═══════════════════════════════════════════════
+document.getElementById('file-input').addEventListener('change', function(e) {
+  handleFile(e.target.files[0]);
+});
+
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  handleFile(e.dataTransfer.files[0]);
+});
+
+function handleFile(file) {
+  if (!file) return;
+  selectedFile = file;
+
+  const preview = document.getElementById('preview-container');
+  const badge   = document.getElementById('preview-badge');
+
+  if (currentMode === '2d' && file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      document.getElementById('preview-img').src = e.target.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+    badge.textContent = '2D MRI IMAGE';
+  } else if (file.name.endsWith('.h5')) {
+    preview.style.display = 'none';
+    badge.textContent = '3D H5 SLICE';
+    showNotification(`✓ H5 file selected: ${file.name}`, 'success');
+  }
+
+  const btn  = document.getElementById('analyze-btn');
+  const text = document.getElementById('btn-text');
+  btn.disabled  = false;
+  text.textContent = `ANALYZE ${currentMode.toUpperCase()} SCAN`;
+}
+
+// ═══════════════════════════════════════════════
+// ANALYSIS
+// ═══════════════════════════════════════════════
+async function runAnalysis() {
+  if (!selectedFile) return;
+
+  showLoading(true);
+  setLoadingText('Preprocessing MRI scan...');
+
+  const formData = new FormData();
+  formData.append('file', selectedFile);
+
+  const endpoint = currentMode === '2d' ? '/predict/2d' : '/predict/3d';
+
+  try {
+    setTimeout(() => setLoadingText('Running EfficientNet-B4 encoder...'), 800);
+    setTimeout(() => setLoadingText('Applying U-Net decoder...'), 1800);
+    setTimeout(() => setLoadingText('Generating segmentation masks...'), 2800);
+
+    const res  = await fetch(endpoint, { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (data.error) throw new Error(data.error);
+
+    showLoading(false);
+    displayResults(data);
+
+  } catch (err) {
+    showLoading(false);
+    showNotification('❌ ' + err.message, 'error');
+    console.error(err);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// DISPLAY RESULTS
+// ═══════════════════════════════════════════════
+function displayResults(data) {
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('results-content').style.display = 'block';
+
+  // Classification Banner
+  const isTumor   = data.prediction !== 'No Tumor';
+  const banner    = document.getElementById('result-banner');
+  banner.className = 'result-banner ' + (isTumor ? 'tumor' : 'no-tumor');
+  document.getElementById('result-name').textContent  = data.prediction;
+  document.getElementById('conf-value').textContent   = (data.confidence * 100).toFixed(1) + '%';
+  document.getElementById('inference-time').textContent = `${data.inference_ms.toFixed(1)} ms inference · ${data.device.toUpperCase()}`;
+
+  // Probability Bars
+  const probContainer = document.getElementById('prob-bars');
+  probContainer.innerHTML = '';
+  const classNames = ['Glioma', 'Meningioma', 'No Tumor', 'Pituitary'];
+  classNames.forEach(cls => {
+    const prob    = data.probabilities[cls] || 0;
+    const isActive= cls === data.prediction;
+    probContainer.innerHTML += `
+      <div class="prob-row">
+        <span class="prob-label">${cls}</span>
+        <div class="prob-track">
+          <div class="prob-fill ${isActive ? 'active' : 'inactive'}"
+               style="width:0%" data-target="${prob * 100}"></div>
+        </div>
+        <span class="prob-value">${(prob*100).toFixed(1)}%</span>
+      </div>`;
+  });
+
+  // Animate bars
+  setTimeout(() => {
+    document.querySelectorAll('.prob-fill[data-target]').forEach(el => {
+      el.style.width = el.dataset.target + '%';
+    });
+  }, 100);
+
+  // 3D Segmentation
+  if (data.type === '3D' && data.images) {
+    document.getElementById('seg-section').style.display = 'block';
+
+    // Images
+    document.getElementById('seg-flair').src   = 'data:image/png;base64,' + data.images.flair;
+    document.getElementById('seg-overlay').src = 'data:image/png;base64,' + data.images.segmentation;
+
+    // Modality grid
+    const modGrid = document.getElementById('modality-grid-container');
+    modGrid.innerHTML = `<img src="data:image/png;base64,${data.images.modality_grid}" alt="Modalities">`;
+
+    // Dice scores
+    const diceGrid = document.getElementById('dice-grid');
+    diceGrid.innerHTML = '';
+    const regions = ['WT', 'TC', 'ET'];
+    const names   = ['Whole Tumor', 'Tumor Core', 'Enhancing'];
+    regions.forEach((r, i) => {
+      const dice     = data.segmentation.dice_scores[r];
+      const quality  = dice > 0.8 ? 'good' : dice > 0.6 ? 'ok' : 'poor';
+      diceGrid.innerHTML += `
+        <div class="dice-card">
+          <div class="region">${r}</div>
+          <div class="dice-val ${quality}">${dice.toFixed(3)}</div>
+          <div class="dice-label">${names[i]}</div>
+        </div>`;
+    });
+
+    // Volume bars
+    const volList = document.getElementById('volume-list');
+    volList.innerHTML = '';
+    const vols   = data.segmentation.tumor_volumes;
+    const maxVol = Math.max(...Object.values(vols));
+    const fills  = ['wt-fill', 'tc-fill', 'et-fill'];
+    Object.entries(vols).forEach(([name, vol], i) => {
+      const pct = maxVol > 0 ? (vol / maxVol * 100) : 0;
+      volList.innerHTML += `
+        <div class="volume-row">
+          <span class="volume-label">${name}</span>
+          <div class="volume-track">
+            <div class="volume-fill ${fills[i]}" style="width:0%" data-target="${pct}"></div>
+          </div>
+          <span class="volume-value">${vol.toFixed(0)} mm²</span>
+        </div>`;
+    });
+
+    setTimeout(() => {
+      document.querySelectorAll('.volume-fill[data-target]').forEach(el => {
+        el.style.width = el.dataset.target + '%';
+      });
+    }, 300);
+
+    // Report link
+    document.getElementById('report-btn').href = data.report_url;
+  } else {
+    document.getElementById('seg-section').style.display = 'none';
+  }
+
+  showNotification('✓ Analysis complete', 'success');
+}
+
+// ═══════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════
+function showLoading(show) {
+  const overlay = document.getElementById('loading-overlay');
+  const btn     = document.getElementById('analyze-btn');
+  const spinner = document.getElementById('btn-spinner');
+  const btnText = document.getElementById('btn-text');
+
+  if (show) {
+    overlay.classList.add('show');
+    btn.disabled          = true;
+    spinner.style.display = 'block';
+    btnText.textContent   = 'ANALYZING...';
+  } else {
+    overlay.classList.remove('show');
+    btn.disabled          = false;
+    spinner.style.display = 'none';
+    btnText.textContent   = 'ANALYZE AGAIN';
+  }
+}
+
+function setLoadingText(text) {
+  document.getElementById('loading-sub').textContent = text;
+}
+
+function showNotification(msg, type='success') {
+  const el  = document.getElementById('notification');
+  el.textContent = msg;
+  el.className   = `notification ${type}`;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 3500);
+}
+
+function resetUI() {
+  selectedFile = null;
+  document.getElementById('preview-container').style.display = 'none';
+  document.getElementById('preview-img').src = '';
+  document.getElementById('file-input').value = '';
+  document.getElementById('analyze-btn').disabled = true;
+  document.getElementById('btn-text').textContent = 'SELECT A FILE TO BEGIN';
+  document.getElementById('empty-state').style.display = 'flex';
+  document.getElementById('results-content').style.display = 'none';
+}
+</script>
+</body>
+</html>

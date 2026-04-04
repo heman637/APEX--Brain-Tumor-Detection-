@@ -1,0 +1,53 @@
+# ============================================================
+#  BRAIN TUMOR DETECTION — SECTION 7: FULL TECH STACK
+#  Install: pip install -r requirements.txt
+# ============================================================
+
+# Core Deep Learning
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# EfficientNet backbone (Section 4 Stage 1)
+efficientnet-pytorch
+
+# Medical Imaging Framework (Section 7 — MONAI is core)
+monai[all]
+
+# BraTS H5 file reading
+h5py
+
+# NIfTI file support (backup)
+nibabel
+
+# N4ITK Bias Field Correction + skull stripping (Section 5.4)
+SimpleITK
+
+# Explainability — Grad-CAM++ (Section 5.2)
+grad-cam
+
+# SNN — ANN to SNN conversion (Section 5.5)
+spikingjelly
+
+# Image Processing
+opencv-python
+Pillow
+
+# Scientific Computing
+numpy
+scipy
+scikit-image
+scikit-learn
+pandas
+
+# Visualization (Section 5.3)
+matplotlib
+plotly
+vtk
+
+# Training Utilities
+tqdm
+tensorboard
+
+# Calibration (Section 5.2 temperature scaling)
+netcal
